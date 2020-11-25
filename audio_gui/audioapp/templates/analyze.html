@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
+<div id="bloc_page">
     <header>
-    
         <div id="titre_principal">
             <h1>OAEIOU speech processing</h1>    
         </div>
@@ -13,7 +13,7 @@
                 <ul>
                     {% for key,value in myStringTables.items() %} 
                             
-                        <li><a href="#">{{ key }}</a></li>
+                        <li><a href="#{{ key }}">{{ key }}</a></li>
                     {% endfor %}
 
                 </ul>

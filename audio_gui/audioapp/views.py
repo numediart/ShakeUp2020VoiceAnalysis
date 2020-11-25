@@ -1,6 +1,6 @@
 
 import librosa as lb
-from flask import logging, Flask, render_template, request, make_response, url_for, session, Markup
+from flask import logging, Flask, render_template, request, make_response, url_for, session, Markup, send_file
 from subprocess import run, PIPE
 import io, os
 import random
@@ -16,7 +16,8 @@ from flask import send_from_directory
 from .evaAnalyze import *
 
 app = Flask(__name__)
-app.secret_key = b'o)\xaf\x13\xc0\ndt+\xf8\xa0\xba\xef\xef=\x8e\xb9p\xb2Atqv^'
+app.config.from_object('config')
+
 def random_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
@@ -33,15 +34,11 @@ def delete_visits():
     session.pop('visits', None) # delete visits
     return 'Visits deleted'
 
-# @app.route('/tmp/<path:filename>')
-# def download(filename):
-#     print(filename)
-#     return send_from_directory(directory='tmp', filename=filename)
 
 @app.route('/tmp/audio.wav')
-def download(filename):
-    print(filename)
-    return send_from_directory(directory='tmp', filename=session.get('wavName'))
+def download():
+    print(session['wavName'])
+    return send_file( session.get('wavName'))
 
     
 @app.route('/plot.png')
@@ -71,10 +68,12 @@ def plot_svg():
 @app.route('/')
 @app.route('/index.html')
 def index():
+
+    print(app.config["CLIENT_SOUNDS"])
     if 'wavName' in session and os.path.exists(session.get('wavName')):
         print('wavname is already : ',session.get('wavName'))
     else:
-        session['wavName']='./audioapp/tmp/'+random_generator(10)+'.wav'
+        session['wavName']=app.config["CLIENT_SOUNDS"]+random_generator(10)+'.wav'
         print('new wav name:',session.get('wavName'))
         with open(session.get('wavName'), 'w') as fp: 
             pass

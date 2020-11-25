@@ -5,12 +5,26 @@ body
     color: black;
 }
 
+#bloc_page
+{
+    top: 0;
+    width: 900px;
+    margin: auto;
+    
+    display: flex;
+    flex-direction: column;
+}
+
 header 
 {
-    
+    position: relative;
+    top: 0;
+    height:200px; 
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    width: 100%;
+    max-width: 900px;
 }
 
 #titre_principal
@@ -21,14 +35,59 @@ header
 nav
 {
     display: flex;
-    justify-content: space-around;
-
-    font-size: 1.3em;
+    width :40%;
     color: #181818;
     padding-bottom: 3px;
     text-decoration: none;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
 }
 
-.menu
+nav h1
 {
+    font-size: 1em;
+
+}
+nav ul
+{
+    list-style-type: none;
+    justify-content: left;
+}
+nav li
+{
+    font-size: 0.8em;
+
+}
+nav a
+{
+    color: #181818;
+    text-decoration: none;
+}
+
+nav a:hover
+{
+    color: #760001;
+    border-bottom: 1px solid #760001;
+}
+
+section
+{
+    position: absolute;
+    top: 200px;
+    bottom: 50px;
+    overflow: auto;
+    width: 900px;
+
+}
+footer
+{
+    
+    width: 900px;
+    position: fixed;
+    bottom: 0;
+    
+    /*width:1000px;*/
+    height:30px;
+
 }
