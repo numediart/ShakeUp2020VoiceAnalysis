@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block body %}
+    <header>
+    
+        <div id="titre_principal">
+            <h1>OAEIOU speech processing</h1>    
+        </div>
+        <nav>
+            <div class="menu1">
+                <h1>
+                    Tables
+                </h1>
+                <ul>
+                    {% for key,value in myStringTables.items() %} 
+                            
+                        <li><a href="#">{{ key }}</a></li>
+                    {% endfor %}
+
+                </ul>
+            
+            </div>
+            <div class="menu2">
+                <h1>
+                    Figures
+                </h1>
+                <ul>
+                    {% for key,value in mySvgFigures.items() %} 
+                            
+                        <li><a href="#{{ key }}">{{ key }}</a></li>
+                    {% endfor %}
+
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <section>
+        <article>
+            <h1>
+                Tables
+            </h1>
+            <!-- 
+            <img src="/myJitterAndShimmer.svg" alt="my plot"></img>
+            <img src="/myJitterAndShimmer.svg" alt="my plot">
+            <img src="/myFft.svg" alt="my plot"></img>
+            <img src="/plot.svg" alt="my plot"></img> -->
+            {% for key,value in myStringTables.items() %} 
+                <table style  id="{{ key }}" >
+                    <caption>{{ key }}</caption>
+                    {% for row in value %}    
+                        <tr>
+                            <td>{{row}}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endfor %}
+        </article>
+        <article>
+            <h1>
+                Figures
+            </h1>
+
+            {% for key,value in mySvgFigures.items() %} 
+                <figure id="{{ key }}">
+                    {{ value }}
+                    <figcaption >{{ key }}</figcaption>
+                </figure>
+            {% endfor %}
+            
+        </article>
+        
+    </section>
+    <footer>
+        <button id="Listen" class="btn btn-info" onclick="window.open('/tmp/audio.wav')">Listen</button>
+        <button id="return" class="btn btn-success" onclick="location.href='index.html'">Return</button>
+        <button id="Archive" class="btn btn-success" onclick="location.href='todo.html'">Archive TODO</button>
+    </footer>
+
+{% endblock %}
