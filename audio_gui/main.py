@@ -51,6 +51,6 @@ def locOpennbrowser():
 if __name__ == "__main__":
     #app.logger = logging
     #app.logger = logging.getLogger('audio-gui')
-    app.run(host='0.0.0.0',debug=False,ssl_context='adhoc')
+    #app.run(host='0.0.0.0',debug=False,ssl_context='adhoc')
     #threading.Timer(1, lambda:locOpennbrowser() ).start()
-    #app.run(debug=True)
+    app.run(debug=True)
