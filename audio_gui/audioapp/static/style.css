@@ -8,7 +8,7 @@ body
 #bloc_page
 {
     top: 0;
-    width: 900px;
+    width: 1200px;
     margin: auto;
     
     display: flex;
@@ -19,12 +19,12 @@ header
 {
     position: relative;
     top: 0;
-    height:200px; 
+    height:150px; 
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
 }
 
 #titre_principal
@@ -74,20 +74,33 @@ nav a:hover
 section
 {
     position: absolute;
-    top: 200px;
+    top: 150px;
+    
     bottom: 50px;
     overflow: auto;
-    width: 900px;
+    width: 1200px;
 
 }
 footer
 {
     
-    width: 900px;
+    width: 1200px;
     position: fixed;
     bottom: 0;
     
     /*width:1000px;*/
     height:30px;
 
+}
+
+table
+{
+    margin-left: auto;
+    margin-right: auto;
+    text-align : center;
+    border-collapse: collapse;
+}
+td, th /* Mettre une bordure sur les td ET les th */
+{
+    border: 1px solid black;
 }

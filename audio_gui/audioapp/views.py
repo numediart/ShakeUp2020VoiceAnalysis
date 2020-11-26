@@ -1,19 +1,21 @@
 
 import librosa as lb
 from flask import logging, Flask, render_template, request, make_response, url_for, session, Markup, send_file
+from flask import Response
+from flask import send_from_directory
 from subprocess import run, PIPE
 import io, os
 import random
 import string
+from zipfile import ZipFile
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.backends.backend_svg import FigureCanvasSVG 
 from matplotlib.figure import Figure
-from flask import Response
-import scipy.io.wavfile as wav
-from flask import send_from_directory
 
 from .evaAnalyze import *
+
+
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -43,10 +45,10 @@ def download():
     
 @app.route('/plot.png')
 def plot_png():
-    (rate, data) = wav.read(session.get('wavName'))
+    wavdata, fs = lb.load(session.get('wavName'))
     fig = Figure()
     axis = fig.add_subplot(1, 1, 1)
-    axis.plot(data)
+    axis.plot(wavdata)
     output = io.BytesIO()    
     FigureCanvas(fig).print_png(output)
     #wav.write('./audioapp/tmp/audio.wav', rate, data)
@@ -56,70 +58,105 @@ def plot_png():
 def plot_svg():
     print('test')
     svg_io = io.StringIO()
-    (rate, data) = wav.read(session.get('wavName'))
+    wavdata, fs = lb.load(session.get('wavName'))
     fig = Figure()
     axis = fig.add_subplot(1, 1, 1)
-    axis.plot(data)
+    axis.plot(wavdata)
     FigureCanvasSVG(fig).print_svg(svg_io)
     #print(svg_io.getvalue())
     return Response(svg_io.getvalue(), mimetype='image/svg+xml')
 
 
-@app.route('/')
-@app.route('/index.html')
-def index():
-
-    print(app.config["CLIENT_SOUNDS"])
-    if 'wavName' in session and os.path.exists(session.get('wavName')):
-        print('wavname is already : ',session.get('wavName'))
-    else:
-        session['wavName']=app.config["CLIENT_SOUNDS"]+random_generator(10)+'.wav'
-        print('new wav name:',session.get('wavName'))
-        with open(session.get('wavName'), 'w') as fp: 
-            pass
-    return render_template('index.html')
-
 def addSvgFigure(myList, myName,myFig):
     #TODO check if myList is a dict, if myName is a string and myStringTable is a list of Table
-    svg_io = io.StringIO()
-    FigureCanvasSVG(myFig).print_svg(svg_io)
-    myList[myName]=Markup(svg_io.getvalue())
+    try: 
+        svg_io = io.StringIO()
+        FigureCanvasSVG(myFig).print_svg(svg_io)
+        myList[myName]=Markup(svg_io.getvalue())
+    except:
+        pass
 
 def addStringTable(myList, myName,myStringTable):
     #TODO check if myList is a dict, if myName is a string and myStringTable is a list of Table
     myList[myName]=myStringTable
 
 
+def addValueTable(myDictData, myName,myData):
+    tempData = myData
+    for key,value in tempData.items():
+        tempData[key]=round(value,5)
+    myDictData[myName]=tempData
 
 @app.route('/analyze.html')
 def analyze():
     if 'wavName' not in session or not os.path.exists(session.get('wavName')):
         return index()
-    (rate, data) = wav.read(session.get('wavName'))
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    axis.plot(data)
-
-
-    wavdata, fs = lb.load(session.get('wavName'))
-    output = io.BytesIO()    
     
-    [figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
+    wavdata, fs = lb.load(session.get('wavName'))
+
+    fig = Figure( figsize=(10,7.5))
+    axis = fig.add_subplot(1, 1, 1)
+    axis.plot(wavdata)
+        
     mySvgFigures= {}
+
+    [figJitShim,tableJit,tableShim]=myNewJitterAndShimmer(wavdata, fs)
+    #[figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
     addSvgFigure(mySvgFigures,'Acoustical wave',fig)
+    
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
     addSvgFigure(mySvgFigures,'FFT',myFft(wavdata, fs))
     addSvgFigure(mySvgFigures,'Spectrogram',mySpectrogramme(wavdata, fs))
     addSvgFigure(mySvgFigures,'Mel Spectrogram',myMelSpectrogramme(wavdata, fs))
+    
 
-    myStringTables = {}
-    addStringTable(myStringTables,'Jitter',tableJit)
-    addStringTable(myStringTables,'Shimmer',tableShim)
-
+    #myStringTables = {}
+    #addValueTable(myStringTables,'Jitter',tableJit)
+    #addValueTable(myStringTables,'Shimmer',tableShim)
+    myValueTables = {}
+    myValueTables['key']={'O':'O','A':'A','E':'E','I':'I','OU':'OU'}
+    addValueTable(myValueTables,'Jitter',tableJit)
+    addValueTable(myValueTables,'Shimmer',tableShim)
     #print(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue())
     #return render_template('analyze.html', tableShim = tableShim, tableJit = tableJit, plotData = Markup(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue()),plotFft=Markup(svg_io2.getvalue()),
     #    plotSpectrogramme=Markup(svg_io3.getvalue()), plotMelSpectrogramme=Markup(svg_io4.getvalue()))
-    return render_template('analyze.html', myStringTables = myStringTables, mySvgFigures= mySvgFigures)
+    return render_template('analyze.html', myValueTables = myValueTables, myStringTables = {},mySvgFigures= mySvgFigures)
+
+ 
+@app.route('/tmp/archive.zip')
+def archive():
+    baseName=os.path.basename(session['wavName'])
+    print(baseName)
+    #baseName=os.path.splitext( base)[0]+'.zip'
+    myFileName =os.path.splitext( session['wavName'])[0]
+    print(myFileName) 
+    with ZipFile(myFileName+'.zip', 'w') as zipObj:
+        zipObj.write( session['wavName'],'record.wav')
+
+        wavdata, fs = lb.load(session.get('wavName'))
+
+        [figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
+        tempName=myFileName+'jitter.svg'
+        figJitShim.savefig(tempName, format = 'svg')
+        zipObj.write( tempName,'jitter.svg')
+        os.remove(tempName)
+        tempName=myFileName+'fft.svg'
+        myFft(wavdata, fs).savefig(tempName, format = 'svg')
+        zipObj.write( tempName,'fft.svg')
+        os.remove(tempName)
+        tempName=myFileName+'Spec.svg'
+        mySpectrogramme(wavdata, fs).savefig(tempName, format = 'svg')
+        zipObj.write( tempName,'Spec.svg')
+        os.remove(tempName)
+        tempName=myFileName+'MelSpec.svg'
+        myMelSpectrogramme(wavdata, fs).savefig(tempName, format = 'svg')
+        zipObj.write( tempName,'MelSpec.svg')
+        os.remove(tempName)
+
+        zipObj.close()
+    tempSender = send_file(myFileName+'.zip')
+
+    return tempSender
 
 @app.route('/analyze2.html')
 def analyze2():    
@@ -135,3 +172,17 @@ def audio():
     proc = run(['ffprobe', '-of', 'default=noprint_wrappers=1', session.get('wavName')], text=True, stderr=PIPE)
     print(proc.stderr)
     return proc.stderr
+
+@app.route('/')
+@app.route('/index.html')
+def index():
+
+    print(app.config["CLIENT_SOUNDS"])
+    if 'wavName' in session and os.path.exists(session.get('wavName')):
+        print('wavname is already : ',session.get('wavName'))
+    else:
+        session['wavName']=app.config["CLIENT_SOUNDS"]+random_generator(10)+'.wav'
+        print('new wav name:',session.get('wavName'))
+        with open(session.get('wavName'), 'w') as fp: 
+            pass
+    return render_template('index.html')

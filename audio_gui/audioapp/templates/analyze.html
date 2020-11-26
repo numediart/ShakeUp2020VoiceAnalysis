@@ -6,36 +6,82 @@
             <h1>OAEIOU speech processing</h1>    
         </div>
         <nav>
-            <div class="menu1">
+            {% if myValueTables|length > 0 %}
+            <div class="menu">
                 <h1>
+                    <a href="#NumericTable">Numeric Results</a>
+                </h1>
+            </div>
+            {% endif %}
+            {% if myStringTables|length > 0 %}
+            <div class="menu">
+                <h1>
+                    <a href="#StringTable">Tables</a>
                     Tables
                 </h1>
                 <ul>
                     {% for key,value in myStringTables.items() %} 
                             
-                        <li><a href="#{{ key }}">{{ key }}</a></li>
+                        <li><a href="#table_{{ key }}">{{ key }}</a></li>
                     {% endfor %}
-
                 </ul>
-            
             </div>
-            <div class="menu2">
+            {% endif %}
+            {% if mySvgFigures|length > 0 %}
+            <div class="menu">
                 <h1>
-                    Figures
+                    <a href="#Figures">Figures</a>
                 </h1>
                 <ul>
                     {% for key,value in mySvgFigures.items() %} 
                             
-                        <li><a href="#{{ key }}">{{ key }}</a></li>
+                        <li><a href="#fig_{{ key }}">{{ key }}</a></li>
                     {% endfor %}
 
                 </ul>
             </div>
+            {% endif %}
         </nav>
     </header>
     <section>
+        {% if myValueTables|length > 0 %}
         <article>
-            <h1>
+            <h1 id="NumericTable">
+                Numeric Tables
+            </h1>
+            <table>
+                <caption>Value</caption>
+                <thead> <!-- En-tête du tableau -->
+                    <tr>
+                            <th>key</th>
+                        {% for key2,value2 in myValueTables['key'].items() %} 
+                            <th>{{key2}}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody> <!-- Corps du tableau -->
+                    {% for key,value in myValueTables.items() %} 
+                        {% if key != 'key' %}
+                        <tr>
+                                <th>{{key}}</th>
+                                {% for key2,value2 in myValueTables['key'].items() %}
+                                    {% if value[key2] != nan %}
+                                        <td>{{value[key2]}}</td>
+                                    {% endif %}
+
+                                {% endfor %}
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+            
+                </tbody>
+            </table>
+        </article>
+        {% endif %}
+        {% if myStringTables|length > 0 %}
+
+        <article>
+            <h1 id ="StringTable">
                 Tables
             </h1>
             <!-- 
@@ -44,7 +90,7 @@
             <img src="/myFft.svg" alt="my plot"></img>
             <img src="/plot.svg" alt="my plot"></img> -->
             {% for key,value in myStringTables.items() %} 
-                <table style  id="{{ key }}" >
+                <table style  id="table_{{ key }}" >
                     <caption>{{ key }}</caption>
                     {% for row in value %}    
                         <tr>
@@ -54,25 +100,29 @@
                 </table>
             {% endfor %}
         </article>
+        
+        {% endif %}
+        {% if mySvgFigures|length > 0 %}
         <article>
-            <h1>
+            <h1 id="Figures">
                 Figures
             </h1>
 
             {% for key,value in mySvgFigures.items() %} 
-                <figure id="{{ key }}">
+                <figure id="fig_{{ key }}">
                     {{ value }}
                     <figcaption >{{ key }}</figcaption>
                 </figure>
             {% endfor %}
             
         </article>
+        {% endif %}
         
     </section>
     <footer>
         <button id="Listen" class="btn btn-info" onclick="window.open('/tmp/audio.wav')">Listen</button>
         <button id="return" class="btn btn-success" onclick="location.href='index.html'">Return</button>
-        <button id="Archive" class="btn btn-success" onclick="location.href='todo.html'">Archive TODO</button>
+        <button id="Archive" class="btn btn-success" onclick="window.open('/tmp/archive.zip')">Archive</button>
     </footer>
 
 {% endblock %}

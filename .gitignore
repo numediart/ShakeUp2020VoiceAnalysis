@@ -1,2 +1,5 @@
 audio_gui/build
 audio_gui/dist
+*/*.pyc
+*/*.pyc
+audio_gui/__pycache__/
