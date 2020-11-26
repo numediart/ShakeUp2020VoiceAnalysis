@@ -76,12 +76,12 @@ def addSvgFigure(myList, myName,myFig):
     except:
         pass
 
-def addStringTable(myList, myName,myStringTable):
+def addStringTable(myList, myName, myStringTable):
     #TODO check if myList is a dict, if myName is a string and myStringTable is a list of Table
     myList[myName]=myStringTable
 
 
-def addValueTable(myDictData, myName,myData):
+def addValueTable(myDictData, myName, myData):
     tempData = myData
     for key,value in tempData.items():
         tempData[key]=round(value,5)
