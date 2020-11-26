@@ -81,10 +81,10 @@ def addStringTable(myList, myName, myStringTable):
     myList[myName]=myStringTable
 
 
-def addValueTable(myDictData, myName, myData):
+def addValueTable(myDictData, myName, myData,numVirg):
     tempData = myData
     for key,value in tempData.items():
-        tempData[key]=round(value,5)
+        tempData[key]=round(value,numVirg)
     myDictData[myName]=tempData
 
 @app.route('/analyze.html')
@@ -92,20 +92,22 @@ def analyze():
     if 'wavName' not in session or not os.path.exists(session.get('wavName')):
         return index()
     
-    wavdata, fs = lb.load(session.get('wavName'))
+    wavdata, fs = lb.load(session.get('wavName'), sr =None, dtype = np.double)
 
     fig = Figure( figsize=(10,7.5))
     axis = fig.add_subplot(1, 1, 1)
     axis.plot(wavdata)
         
     mySvgFigures= {}
-
-    [figJitShim,tableJit,tableShim]=myNewJitterAndShimmer(wavdata, fs)
+    [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myNewJitterAndShimmer(wavdata, fs)
     #[figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
     addSvgFigure(mySvgFigures,'Acoustical wave',fig)
     
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
-    addSvgFigure(mySvgFigures,'FFT',myFft(wavdata, fs))
+    seg_names = ["O", "A", "E", "I", "OU"]
+
+    addSvgFigure(mySvgFigures,'FFT',myFft(wavdata, fs,seg_names))
+    addSvgFigure(mySvgFigures,'FFT_1000',myFft_1000(wavdata, fs,seg_names))
     addSvgFigure(mySvgFigures,'Spectrogram',mySpectrogramme(wavdata, fs))
     addSvgFigure(mySvgFigures,'Mel Spectrogram',myMelSpectrogramme(wavdata, fs))
     
@@ -115,8 +117,14 @@ def analyze():
     #addValueTable(myStringTables,'Shimmer',tableShim)
     myValueTables = {}
     myValueTables['key']={'O':'O','A':'A','E':'E','I':'I','OU':'OU'}
-    addValueTable(myValueTables,'Jitter',tableJit)
-    addValueTable(myValueTables,'Shimmer',tableShim)
+
+    addValueTable(myValueTables,'Jitter',tableJit,5)
+    addValueTable(myValueTables,'Shimmer',tableShim,3)
+    addValueTable(myValueTables,'pitch_av',pitch_av,0)
+    addValueTable(myValueTables,'pitch_var',pitch_var,2)
+    addValueTable(myValueTables,'pitch_beg_end',pitch_beg_end,2)
+    addValueTable(myValueTables,'pitch_huitieme',pitch_huitieme,2)
+    addValueTable(myValueTables,'bri_av',bri_av,1)
     #print(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue())
     #return render_template('analyze.html', tableShim = tableShim, tableJit = tableJit, plotData = Markup(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue()),plotFft=Markup(svg_io2.getvalue()),
     #    plotSpectrogramme=Markup(svg_io3.getvalue()), plotMelSpectrogramme=Markup(svg_io4.getvalue()))
@@ -133,15 +141,16 @@ def archive():
     with ZipFile(myFileName+'.zip', 'w') as zipObj:
         zipObj.write( session['wavName'],'record.wav')
 
-        wavdata, fs = lb.load(session.get('wavName'))
+        wavdata, fs = lb.load(session.get('wavName'), sr =None, dtype = np.double)
 
-        [figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
+        [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myNewJitterAndShimmer(wavdata, fs)
         tempName=myFileName+'jitter.svg'
         figJitShim.savefig(tempName, format = 'svg')
         zipObj.write( tempName,'jitter.svg')
         os.remove(tempName)
         tempName=myFileName+'fft.svg'
-        myFft(wavdata, fs).savefig(tempName, format = 'svg')
+        seg_names = ["O", "A", "E", "I", "OU"]
+        myFft(wavdata, fs,seg_names).savefig(tempName, format = 'svg')
         zipObj.write( tempName,'fft.svg')
         os.remove(tempName)
         tempName=myFileName+'Spec.svg'

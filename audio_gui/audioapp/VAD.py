@@ -1,12 +1,26 @@
 import numpy as np
 import scipy.io.wavfile as wf
 import matplotlib.pyplot as plt
+import pyworld as pw
 
 class VoiceActivityDetector():
     """ Use signal energy to detect voice activity in wav file """
     
-    def __init__(self, wave_input_filename):
-        self._read_wav(wave_input_filename)._convert_to_mono()
+    # def __init__(self, wave_input_filename):
+    #     self._read_wav(wave_input_filename)._convert_to_mono()
+    #     self.sample_window = 0.02 #20 ms
+    #     self.sample_overlap = 0.01 #10ms
+    #     self.speech_window = 0.5 #half a second
+    #     self.speech_energy_threshold = 0.6 #60% of energy in voice band
+    #     self.speech_start_band = 300
+    #     self.speech_end_band = 3000
+
+    def __init__(self, wav, fs):
+        self.rate = fs
+        self.data = wav
+        self.channels = len(self.data.shape)
+        self._convert_to_mono()
+        #self._read_wav(wave_input_filename)._convert_to_mono()
         self.sample_window = 0.02 #20 ms
         self.sample_overlap = 0.01 #10ms
         self.speech_window = 0.5 #half a second

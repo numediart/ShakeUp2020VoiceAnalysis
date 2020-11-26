@@ -65,10 +65,7 @@
                         <tr>
                                 <th>{{key}}</th>
                                 {% for key2,value2 in myValueTables['key'].items() %}
-                                    {% if value[key2] != nan %}
-                                        <td>{{value[key2]}}</td>
-                                    {% endif %}
-
+                                    <td>{{value[key2]}}</td>
                                 {% endfor %}
                         </tr>
                         {% endif %}
