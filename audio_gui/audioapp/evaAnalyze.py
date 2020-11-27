@@ -10,6 +10,26 @@ from matplotlib.figure import Figure
 import pyworld as pw
 from math import nan
 
+
+def segmentedSonogram(wav,fs):
+    fig = Figure(figsize=(10, 7.5))
+
+    vowels = ["O", "A", "E", "I", "OU"]
+    nseg = len(vowels)
+
+    axis = fig.add_subplot(1, 1, 1)
+    segs,index = segment_audio(wav, fs,nseg)
+    tot = 0
+    x = [i/fs for i in range(0, len(wav))]
+    axis.plot(x,wav)
+
+    for seg, lInd in zip(segs, index):
+        x = [i/fs for i in range(lInd[0],lInd[1])]
+        print(len(x))
+        axis.plot(x,seg)
+    return fig
+
+
 def myJitterAndShimmer(wav, fs):
     # wav, fs = lb.load(path)
 
@@ -28,7 +48,7 @@ def myJitterAndShimmer(wav, fs):
     vowels = ["O", "A", "E", "I", "OU"]
     nseg = len(vowels)
 # try:
-    segs = segment_audio(wav, fs,nseg)
+    segs,_ = segment_audio(wav, fs,nseg)
     axis = fig.subplots(len(segs), 2)
     for seg, vow in zip(segs, vowels):
         
@@ -117,12 +137,12 @@ def myNewJitterAndShimmer(wav, fs):
     dictShimmer = {}
     vowels = ["O", "A", "E", "I", "OU"]
     nseg = len(vowels)
-    segs = segment_audio(wav, fs,nseg)
+    segs,segIds = segment_audio(wav, fs,nseg)
         
     print('shapeseg',len(segs))
 
     axis = fig.subplots(len(segs), 2)
-        
+    fig.tight_layout(pad=1.5)        
     for seg, vow in zip(segs, vowels):
             
         try:
@@ -164,12 +184,12 @@ def myNewJitterAndShimmer(wav, fs):
                 pitch_beg_end[vow] =(pitch[-1] - pitch[0])
                 pitch_ref_time = 1 / 8  # 1/8 of a sec
                 pitch_ref_ind = int(pitch_ref_time / (frame_period * 0.001))
-                if len(pitch) < pitch_ref_ind:
+                if len(pitch) < (pitch_ref_ind+1):#attention perhaps it will be enough
                     print("Signal trop court pour calculer la difference debut et moyenne")
                     raise
                 else:
                     # print("La difference de pitch entre le debut et la fin pour la voyelle {} est {}".format(vow, np.mean(pitch)-pitch[pitch_ref_ind]))
-                    pitch_huitieme[vow] =(np.mean(pitch) - pitch[pitch_ref_ind])
+                    pitch_huitieme[vow] =np.mean(pitch[pitch_ref_ind:]) - pitch[pitch_ref_ind]#(np.mean(pitch) - pitch[pitch_ref_ind])
             except :
                 pitch_beg_end[vow] = nan
                 pitch_av[vow] = nan
@@ -179,9 +199,12 @@ def myNewJitterAndShimmer(wav, fs):
                 pitch_huitieme[vow] = nan
             brilliance = lb.feature.spectral_centroid(seg, sr=fs)
             bri_av[vow] =(np.mean(brilliance))
-            axis[i, 0].plot(seg)
+            x = [lTime/fs for lTime in range(segIds[i][0],segIds[i][1])]
+            axis[i, 0].plot(x,seg)
+            axis[i, 0].set_title('wave form of '+vow)
             # axis.title("Vowel {}".format(vow))
             axis[i, 1].plot(pitch)
+            axis[i, 1].set_title('pitch of '+vow)
             i = i + 1
         except:
             print("GAAARGLLLL on ", vow)
@@ -209,14 +232,16 @@ def myFft(wav, fs, seg_names):
     Returns:
         [type]: [description]
     """
-    segs = segment_audio(wav, fs, len(seg_names))
+    segs,_ = segment_audio(wav, fs, len(seg_names))
     i = 0
     fig = Figure(figsize=(10, 7.5))
     v_dct, freqs = average_freqs(segs, fs, seg_names)
     axis = fig.subplots(len(v_dct),1)
+    fig.tight_layout(pad=2.0)        
     for vowel, freqs_amps in v_dct.items():
         if len(freqs_amps) == len(freqs):  # NOTE:really need this? always same length
             axis[i].plot(freqs, 20 * np.log10(freqs_amps))
+            axis[i].set_title('fft of '+ vowel)
             i += 1
     return fig
 
@@ -225,14 +250,16 @@ def myFft(wav, fs, seg_names):
 def myFft_1000(wav, fs, seg_names):
     fig = Figure(figsize=(10, 7.5))
     try:
-        segs = segment_audio(wav, fs, len(seg_names))
+        segs,_ = segment_audio(wav, fs, len(seg_names))
         i = 0
         v_dct, freqs = average_freqs(segs, fs, seg_names)
         freqs = freqs[freqs <= 1000]  # keep <=1000 Hz
         axis = fig.subplots(len(v_dct),1)
+        fig.tight_layout(pad=2.0)
         for vowel, freqs_amps in v_dct.items():
             freqs_amps = freqs_amps[: len(freqs)]  # keep <=1000 Hz
             axis[i].plot(freqs, 20 * np.log10(freqs_amps))
+            axis[i].set_title('fft of '+ vowel)
             i += 1
     except:
         pass

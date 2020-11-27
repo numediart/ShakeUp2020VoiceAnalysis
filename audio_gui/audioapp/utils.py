@@ -1,4 +1,4 @@
-from scipy import signal
+from scipy import signal,fft
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,18 +26,55 @@ def spectrogram(signal, fs):
 #     return lst
 
 
-def segment_audio(path, nsegments):
-    wav, fs = lb.load(path, dtype=np.float64)
-    ind, _ = _segment(path, nsegments)
+def segment_audio(wav, fs, nsegments):
+    """[summary]
+
+    Args:
+        wav ([type]): full audio array
+        fs ([type]): audio sampling frequency
+        nsegments ([type]): number of segments needed
+
+    Returns:
+        [type]: [description]
+    """
+    #wav, fs = lb.load(path, dtype=np.float64)
+    ind, _ = _segment(wav, fs, nsegments)
     lst = []
+    indLst =[]
     for i in range(len(ind) - 1):
         lst.append(wav[ind[i] : ind[i + 1]])
-    return lst
+        indLst.append([ind[i],ind[i + 1]])
+    print('--------------------',nsegments,len(lst))
+
+    if (len(lst)>nsegments):
+        lPower=np.zeros(len(lst))
+        i=0
+        for lWav in lst:
+            nptest=np.array(lWav)
+            lPower[i]=np.square(nptest).mean()
+            i=i+1
+        lPowMean=lPower.mean()
+        lst2=[]
+        indLst2=[]
+        for lInd in range(len(lst)):
+            if lPower[lInd]>lPowMean/10:
+                print(lInd)
+                lst2.append(lst[lInd])
+                indLst2.append(indLst[lInd])
+        while (len(lst2)>nsegments):
+            minId=np.array([len(lIt) for lIt in lst2]).argmin()
+            indLst2.pop(minId)
+            lst2.pop(minId)
+        indLst=indLst2
+        lst=lst2
+    return lst,indLst
 
 
 def compute_fft(wav, fs):
-    w, h = signal.freqz(wav, 1)
+    #print('len fft',len(wav))
+    w, h = signal.freqz(wav, 1, worN =2048)
     f = (w * fs) / (2 * np.pi)
+    
     mod_h = abs(h)
     return f, mod_h
 
@@ -50,7 +87,7 @@ def average_freqs(segs, fs, segments, width=0.1):
     for vowel, v_key in zip(vowels, v_dct):
         frames = []
         for i in range(0, len(vowel), width):
-            frames.append(vowel[i:width])
+            frames.append(vowel[i:i+width])
         spect = []
         for seg in frames:
             f, h = compute_fft(seg, fs)
@@ -94,7 +131,8 @@ def moving_average(sig, n=100):
 
 ###segment
 from sklearn.cluster import KMeans
-from VAD import VoiceActivityDetector
+from .VAD import VoiceActivityDetector
+
 
 
 def clean_classes(lst, width):
@@ -109,35 +147,60 @@ def clean_classes(lst, width):
             lst[i + j] = most_freq
     return lst
 
+# def clean_classes(lst, width):
+#     """lst contains the classes
+#     sr is the sampling rate corresponding to the classes not the signal"""
+#     lst2=lst
+#     for i in range(0, len(lst), 1):
+#         swidth=int(width/2)
+#         idMin=max(i-swidth,0)
+#         idMax =min(i+swidth,len(lst))
+#         #print(idMin,idMax)
+#         most_freq = max(set(lst[idMin : idMax]), key=lst[idMin : idMax].count)
+#         lst2[i] = most_freq
+#     return lst2
+
 
 def trim_first_zeros(audio, arr):
     for i in range(arr.shape[0]):
         if arr[i, 1] == 1:
             ind = int(arr[i - 1, 0])
-            return audio[ind:]
+            print('first',ind/48000)
+            return [audio[ind:],ind]
 
 
-def _segment(path, nsegments):
-    wav, fs = lb.load(path)
+# def trim_first_zeros(audio, arr):
+#     for i in range(arr.shape[0]):
+#         if arr[i, 1] == 1:
+#             ind = int(arr[i - 1, 0])
+#             if (np.median(arr[i:i+50,1])==1):
+#                 print (ind)
+#                 return [audio[ind:],ind]
+
+
+def _segment(wav, fs, nsegments):
+    #wav, fs = lb.load(path)
     # apply VAD
-    v = VoiceActivityDetector(path)
+    v = VoiceActivityDetector(wav, fs)
     segs = v.detect_speech()
-    wav = trim_first_zeros(wav, segs)
+    
+    [wav,indSpeech] = trim_first_zeros(wav, segs)
     # exctract features
     hop_length = 128
     mfcc = lb.feature.mfcc(wav, sr=fs, n_mfcc=32, hop_length=hop_length)
     mfcc = mfcc.T
     # create KMeans model
-    model = KMeans(n_clusters=nsegments)
+    model = KMeans(n_clusters=nsegments+1)
     model.fit(mfcc)
     segments = model.predict(mfcc)
     # clean (gives better results)
     width = int(fs / hop_length * 0.5)
-    segments = clean_classes(list(segments), width)
+    #segments = clean_classes(list(segments), width)
     # get corresponding indices
-    ind = [0]
+    ind = [indSpeech]
     for i in range(1, len(segments)):
-        if segments[i - 1] != segments[i]:
-            ind.append(i * hop_length)  # to wav samples
-    ind.append(len(wav))
+        if segments[i - 1] != segments[i] and (indSpeech+i * hop_length-ind[-1])/fs>0.2  :
+            ind.append(indSpeech+i * hop_length)  # to wav samples
+    ind.append(len(wav)+indSpeech)
+    print([ltime/fs for ltime in ind])
     return ind, segments
