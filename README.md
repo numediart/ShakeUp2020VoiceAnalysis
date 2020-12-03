@@ -1,6 +1,6 @@
 # ShakeUp2020VoiceAnalysis
 ## License
-© - 2020 – UMONS - CLICK' Living Lab
+© - 2020 – UMONS - ISIA Lab - CLICK' Living Lab
 ShakeUp 2020 Voice Analysis of University of MONS – ISIA Lab (Kevin El Haddad) and CLICK' Living Lab (Thierry Ravet) is free software: 
 you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3 or later. 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
