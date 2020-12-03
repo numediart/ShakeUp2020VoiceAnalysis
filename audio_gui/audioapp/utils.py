@@ -1,3 +1,20 @@
+# ShakeUp2020VoiceAnalysis
+# License
+#© - 2020 – UMONS - CLICK' Living Lab
+# ShakeUp 2020 Voice Analysis of University of MONS – ISIA Lab (Kevin El Haddad) and CLICK' Living Lab (Thierry Ravet) is free software: 
+# you can redistribute it and/or modify it under the terms of the 3-Clause BSD licence. 
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the 3-Clause BSD licence License for more details.
+ 
+# You should have received a copy of the 3-Clause BSD licence along with this program.  
+ 
+# Each use of this software must be attributed to University of MONS – CLICK' Living Lab and ISIA Lab.
+# ## Legal Notices
+# This work was produced as part of the FEDER Digistorm project, co-financed by the European Union and the Wallonia Region.
+# ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
+
+
 from scipy import signal,fft
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
@@ -167,6 +184,7 @@ def trim_first_zeros(audio, arr):
             ind = int(arr[i - 1, 0])
             print('first',ind/48000)
             return [audio[ind:],ind]
+    raise("no voice in the sample")
 
 
 # def trim_first_zeros(audio, arr):
@@ -183,16 +201,20 @@ def _segment(wav, fs, nsegments):
     # apply VAD
     v = VoiceActivityDetector(wav, fs)
     segs = v.detect_speech()
-    
+    print("len:",len(segs))
     [wav,indSpeech] = trim_first_zeros(wav, segs)
     # exctract features
     hop_length = 128
+    print("un ", fs)
     mfcc = lb.feature.mfcc(wav, sr=fs, n_mfcc=32, hop_length=hop_length)
+    print("deux")
     mfcc = mfcc.T
+    print(hop_length)
     # create KMeans model
     model = KMeans(n_clusters=nsegments+1)
     model.fit(mfcc)
     segments = model.predict(mfcc)
+    print(len(segments))
     # clean (gives better results)
     width = int(fs / hop_length * 0.5)
     #segments = clean_classes(list(segments), width)

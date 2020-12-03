@@ -53,6 +53,7 @@ function startRecording() {
     if (!audioRecorder)
         return;
     document.getElementById('start').disabled = true;
+    document.getElementById('analyze').disabled = true;
     document.getElementById('stop').removeAttribute('disabled');
     audioRecorder.clear();
     audioRecorder.record();
@@ -182,10 +183,4 @@ function unpause() {
     audioContext.resume().then(() => {
         console.log('Playback resumed successfully');
     });
-}
-
-function launchAnalysis() {
-    document.getElementById('analyze').disabled = true;
-    console.log('Launch Analysis');
-    window.open("analyze.html","_self"); 
 }

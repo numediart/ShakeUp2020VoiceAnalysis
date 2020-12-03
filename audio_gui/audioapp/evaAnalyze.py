@@ -1,3 +1,21 @@
+# ShakeUp2020VoiceAnalysis
+# License
+#© - 2020 – UMONS - CLICK' Living Lab
+# ShakeUp 2020 Voice Analysis of University of MONS – ISIA Lab (Kevin El Haddad) and CLICK' Living Lab (Thierry Ravet) is free software: 
+# you can redistribute it and/or modify it under the terms of the 3-Clause BSD licence. 
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the 3-Clause BSD licence License for more details.
+ 
+# You should have received a copy of the 3-Clause BSD licence along with this program.  
+ 
+# Each use of this software must be attributed to University of MONS – CLICK' Living Lab and ISIA Lab.
+# ## Legal Notices
+# This work was produced as part of the FEDER Digistorm project, co-financed by the European Union and the Wallonia Region.
+# ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
+
+
+
 from .utils import *
 import librosa as lb
 import librosa.display as disp
@@ -12,23 +30,27 @@ from math import nan
 
 
 def segmentedSonogram(wav,fs):
+    
     fig = Figure(figsize=(10, 7.5))
+    try:
+        vowels = ["O", "A", "E", "I", "OU"]
+        nseg = len(vowels)
 
-    vowels = ["O", "A", "E", "I", "OU"]
-    nseg = len(vowels)
-
-    axis = fig.add_subplot(1, 1, 1)
-    segs,index = segment_audio(wav, fs,nseg)
-    tot = 0
-    x = [i/fs for i in range(0, len(wav))]
-    axis.plot(x,wav)
-
-    for seg, lInd in zip(segs, index):
-        x = [i/fs for i in range(lInd[0],lInd[1])]
-        print(len(x))
-        axis.plot(x,seg)
+        axis = fig.add_subplot(1, 1, 1)
+        segs,index = segment_audio(wav, fs,nseg)
+        tot = 0
+        x = [i/fs for i in range(0, len(wav))]
+        axis.plot(x,wav)
+    
+        for seg, lInd in zip(segs, index):
+            x = [i/fs for i in range(lInd[0],lInd[1])]
+            print(len(x))
+            axis.plot(x,seg)
+    except (ValueError):
+        print("catch", ValueError)
+        pass
     return fig
-
+    
 
 def myJitterAndShimmer(wav, fs):
     # wav, fs = lb.load(path)
@@ -47,8 +69,10 @@ def myJitterAndShimmer(wav, fs):
     bri_av = []
     vowels = ["O", "A", "E", "I", "OU"]
     nseg = len(vowels)
-# try:
-    segs,_ = segment_audio(wav, fs,nseg)
+    try:
+        segs,_ = segment_audio(wav, fs,nseg)
+    except:
+        segs = []
     axis = fig.subplots(len(segs), 2)
     for seg, vow in zip(segs, vowels):
         
@@ -137,8 +161,11 @@ def myNewJitterAndShimmer(wav, fs):
     dictShimmer = {}
     vowels = ["O", "A", "E", "I", "OU"]
     nseg = len(vowels)
-    segs,segIds = segment_audio(wav, fs,nseg)
-        
+    
+    try:
+        segs,segIds = segment_audio(wav, fs,nseg)
+    except:
+        segs = []
     print('shapeseg',len(segs))
 
     axis = fig.subplots(len(segs), 2)
@@ -232,17 +259,20 @@ def myFft(wav, fs, seg_names):
     Returns:
         [type]: [description]
     """
-    segs,_ = segment_audio(wav, fs, len(seg_names))
-    i = 0
     fig = Figure(figsize=(10, 7.5))
-    v_dct, freqs = average_freqs(segs, fs, seg_names)
-    axis = fig.subplots(len(v_dct),1)
-    fig.tight_layout(pad=2.0)        
-    for vowel, freqs_amps in v_dct.items():
-        if len(freqs_amps) == len(freqs):  # NOTE:really need this? always same length
-            axis[i].plot(freqs, 20 * np.log10(freqs_amps))
-            axis[i].set_title('fft of '+ vowel)
-            i += 1
+    try:
+        segs,_ = segment_audio(wav, fs, len(seg_names))
+        i = 0
+        v_dct, freqs = average_freqs(segs, fs, seg_names)
+        axis = fig.subplots(len(v_dct),1)
+        fig.tight_layout(pad=2.0)        
+        for vowel, freqs_amps in v_dct.items():
+            if len(freqs_amps) == len(freqs):  # NOTE:really need this? always same length
+                axis[i].plot(freqs, 20 * np.log10(freqs_amps))
+                axis[i].set_title('fft of '+ vowel)
+                i += 1
+    except:
+        pass
     return fig
 
 

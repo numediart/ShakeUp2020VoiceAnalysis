@@ -1,3 +1,18 @@
+# ShakeUp2020VoiceAnalysis
+# License
+#© - 2020 – UMONS - CLICK' Living Lab
+# ShakeUp 2020 Voice Analysis of University of MONS – ISIA Lab (Kevin El Haddad) and CLICK' Living Lab (Thierry Ravet) is free software: 
+# you can redistribute it and/or modify it under the terms of the 3-Clause BSD licence. 
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the 3-Clause BSD licence License for more details.
+ 
+# You should have received a copy of the 3-Clause BSD licence along with this program.  
+ 
+# Each use of this software must be attributed to University of MONS – CLICK' Living Lab and ISIA Lab.
+# ## Legal Notices
+# This work was produced as part of the FEDER Digistorm project, co-financed by the European Union and the Wallonia Region.
+# ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
 
 import librosa as lb
 from flask import logging, Flask, render_template, request, make_response, url_for, session, Markup, send_file
@@ -89,6 +104,7 @@ def addValueTable(myDictData, myName, myData,numVirg):
 
 @app.route('/analyze.html')
 def analyze():
+    print("analyze")
     if 'wavName' not in session or not os.path.exists(session.get('wavName')):
         return index()
     
@@ -97,16 +113,20 @@ def analyze():
         
     mySvgFigures= {}
 
+    print("wave")
     addSvgFigure(mySvgFigures,'segmented sound wave',segmentedSonogram(wavdata, fs))
 
+    print("jitter")
     [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myNewJitterAndShimmer(wavdata, fs)
     #[figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
     
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
     seg_names = ["O", "A", "E", "I", "OU"]
 
+    print("FFT")
     addSvgFigure(mySvgFigures,'FFT',myFft(wavdata, fs,seg_names))
     addSvgFigure(mySvgFigures,'FFT_1000',myFft_1000(wavdata, fs,seg_names))
+    print("Spectrogram")
     addSvgFigure(mySvgFigures,'Spectrogram',mySpectrogramme(wavdata, fs))
     addSvgFigure(mySvgFigures,'Mel Spectrogram',myMelSpectrogramme(wavdata, fs))
     

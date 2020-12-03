@@ -1,31 +1,51 @@
+<!-- ShakeUp2020VoiceAnalysis
+ License
+© - 2020 – UMONS - CLICK' Living Lab
+ ShakeUp 2020 Voice Analysis of University of MONS – ISIA Lab (Kevin El Haddad) and CLICK' Living Lab (Thierry Ravet) is free software: 
+ you can redistribute it and/or modify it under the terms of the 3-Clause BSD licence. 
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ See the 3-Clause BSD licence License for more details.
+ 
+ You should have received a copy of the 3-Clause BSD licence along with this program.  
+ 
+ Each use of this software must be attributed to University of MONS – CLICK' Living Lab and ISIA Lab.
+ ## Legal Notices
+ This work was produced as part of the FEDER Digistorm project, co-financed by the European Union and the Wallonia Region.
+ ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
+-->
+
+
 {% extends "layout.html" %}
 {% block body %}
 
 
-    <div class="jumbotron">
-        <div class="container">
+    <header>
+        <div id="titre_principal">
+            <h1>OAEIOU speech processing</h1>    
+        </div>
+    </header>
+    <div class="realTimeFFt">
+        <div class="fftContainer">
             <h1>
-                <box-icon type='solid' name='music'></box-icon>
+                <box-icon type='solid' name='rtfft'></box-icon>
                 Audio GUI
             </h1>
         </div>
     </div>
 
-    <div class="container">
+    <div class="buttonContainer">
         <canvas id="analyser" style="width:100%;height:300px;background-color: gray" width="1024" height="500"></canvas>
         <p>
             <button id="init" class="btn btn-info" onclick="unpause()">Start listening</button>
             <button id="start" class="btn btn-success" onclick="startRecording()" disabled>Start</button>
             <button id="stop" class="btn btn-danger" onclick="stopRecording()" disabled>Stop</button>
-            <button id="analyze" class="btn btn-danger" onclick="launchAnalysis()" disabled>Analyze</button>
+            <button id="analyze" class="btn btn-analyze" onclick="location.href='analyze.html'" disabled>Analyze</button>
         </p>
-        <textarea id="output" style="width: 100%;height: 200px" readonly></textarea>
     </div>
-
 
     <script src="{{ url_for('static', filename='recorder.js') }}"></script>
     <script src="{{ url_for('static', filename='audiodisplay.js') }}"></script>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
-
 
 {% endblock %}

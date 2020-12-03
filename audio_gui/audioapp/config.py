@@ -15,8 +15,10 @@
 # ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
 
 
-from flask import Flask
+import os
 
-from .views import app
+SECRET_KEY = b'o)\xaf\x13\xc0\ndt+\xf8\xa0\xba\xef\xef=\x8e\xb9p\xb2Atqv^'
 
-from .evaAnalyze import *
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+CLIENT_SOUNDS = basedir+'/tmp/'

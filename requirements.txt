@@ -1,0 +1,6 @@
+flask
+librosa
+matplotlib
+pyworld
+praat-parselmouth
+scipy
