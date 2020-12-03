@@ -207,7 +207,7 @@ def archive():
 @app.route('/audio', methods=['POST'])
 def audio():
     print('test------------------------------')
-    if (len(request.data)>1000000):
+    if (len(request.data)>2000000):
         print("wav recording is too long")
         return ("too long")
 
