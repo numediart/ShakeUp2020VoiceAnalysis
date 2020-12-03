@@ -1,3 +1,6 @@
+# this files comes from https://github.com/marsbroshok/VAD-python 
+# Alexander USOLTSEV 2015 (c) MIT License
+
 import numpy as np
 import scipy.io.wavfile as wf
 import matplotlib.pyplot as plt
