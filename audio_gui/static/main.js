@@ -33,7 +33,8 @@ function gotBuffers(buffers) {
 function doneEncoding(soundBlob) {
     // fetch('/audio', {method: "POST", body: soundBlob}).then(response => $('#output').text(response.text()))
     fetch('/audio', {method: "POST", body: soundBlob}).then(response => response.text().then(text => {
-        document.getElementById('output').value = text;
+        //document.getElementById('output').value = text;
+        document.getElementById('analyze').disabled = false;
     }));
     recIndex++;
 }
@@ -42,7 +43,6 @@ function stopRecording() {
     // stop recording
     audioRecorder.stop();
     document.getElementById('stop').disabled = true;
-    document.getElementById('analyze').disabled = false;
     document.getElementById('start').removeAttribute('disabled');
     audioRecorder.getBuffers(gotBuffers);
 }

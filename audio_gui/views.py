@@ -28,7 +28,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.backends.backend_svg import FigureCanvasSVG 
 from matplotlib.figure import Figure
 
-from .evaAnalyze import *
+from audioapp import *
 
 
 

@@ -15,10 +15,12 @@
 # ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
 
 
+# WARNING: This is a development server. Do not use it in a production deployment.
+
 import random, threading, webbrowser
 import winreg, os, shlex, time
 
-from audioapp import app
+from views import app
 
 def try_find_chrome_path():
     result = None

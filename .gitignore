@@ -1,4 +1,6 @@
 audio_gui/build
 audio_gui/dist
 audio_gui/audioapp/__pycache__/
-audio_gui/audioapp/tmp/
+audio_gui/tmp/
+.vscode/
+*/__pycache__/
