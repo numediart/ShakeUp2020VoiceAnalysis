@@ -196,13 +196,16 @@ def trim_first_zeros(audio, arr):
 #                 return [audio[ind:],ind]
 
 
-def _segment(wav, fs, nsegments):
+def _segment(wav, fs, nsegments, vocDetect = False):
     #wav, fs = lb.load(path)
     # apply VAD
-    v = VoiceActivityDetector(wav, fs)
-    segs = v.detect_speech()
-    print("len:",len(segs))
-    [wav,indSpeech] = trim_first_zeros(wav, segs)
+    if vocDetect:
+        v = VoiceActivityDetector(wav, fs)
+        segs = v.detect_speech()
+        print("len:",len(segs))
+        [wav,indSpeech] = trim_first_zeros(wav, segs)
+    else:
+        indSpeech=0
     # exctract features
     hop_length = 128
     print("un ", fs)
