@@ -40,6 +40,21 @@ app.config.from_object('config')
 def random_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
+import os.path, time 
+from os import walk
+def cleanTmpRepository():
+    f =[]
+    for root, dirs, files in os.walk(app.config["CLIENT_SOUNDS"]):
+        for filename in files:
+            f.append(root+filename)
+    for filePath in f:
+        print(filePath)
+        print("time: %s" % time.ctime(time.time()))
+        print("last modified: %s" % time.ctime(os.path.getmtime(filePath)))
+        if (time.time()-os.path.getmtime(filePath)>3600):
+            os.remove(filePath)
+    return
+
 @app.route('/visits-counter/')
 def visits():
     if 'visits' in session:
@@ -119,7 +134,7 @@ def analyze():
     addSvgFigure(mySvgFigures,'segmented sound wave',segmentedSonogram(wavdata, fs))
 
     print("jitter")
-    [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myNewJitterAndShimmer(wavdata, fs)
+    [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myJitterAndShimmer(wavdata, fs)
     #[figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
     
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
@@ -164,7 +179,7 @@ def archive():
 
         wavdata, fs = lb.load(session.get('wavName'), sr =None, dtype = np.double)
 
-        [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myNewJitterAndShimmer(wavdata, fs)
+        [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myJitterAndShimmer(wavdata, fs)
         tempName=myFileName+'jitter.svg'
         figJitShim.savefig(tempName, format = 'svg')
         zipObj.write( tempName,'jitter.svg')
@@ -188,26 +203,32 @@ def archive():
 
     return tempSender
 
-@app.route('/analyze2.html')
-def analyze2():    
-    return render_template('analyze2.html')
     
 @app.route('/audio', methods=['POST'])
 def audio():
     print('test------------------------------')
+    if (len(request.data)>1000000):
+        print("wav recording is too long")
+        return ("too long")
+
     with open(session.get('wavName'), 'wb') as f:
         print(len(request.data))
         f.write(request.data)
-    print('test------------------------------')
     proc = run(['ffprobe', '-of', 'default=noprint_wrappers=1', session.get('wavName')], text=True, stderr=PIPE)
     print(proc.stderr)
-    return proc.stderr
+    if proc.returncode:
+        os.remove(session.get('wavName'))
+        with open(session.get('wavName'), 'wb') as f:
+            f.write(request.data)
+        return "False"
+    else:
+        return "True"
 
 @app.route('/')
 @app.route('/index.html')
 def index():
-
-    print(app.config["CLIENT_SOUNDS"])
+    cleanTmpRepository()
+    #print(app.config["CLIENT_SOUNDS"])
     if 'wavName' in session and os.path.exists(session.get('wavName')):
         print('wavname is already : ',session.get('wavName'))
     else:
