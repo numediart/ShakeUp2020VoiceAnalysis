@@ -22,3 +22,10 @@ SECRET_KEY = b'o)\xaf\x13\xc0\ndt+\xf8\xa0\xba\xef\xef=\x8e\xb9p\xb2Atqv^'
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 CLIENT_SOUNDS = basedir+'/tmp/'
+
+#option
+USE_VOICEDETECTION = False
+
+USED_VOWELS = ["O", "A", "E", "I", "OU"]
+
+#USED_VOWELS = ["LA0", "LA1", "LA2", "LA3", "LA4", "LA5"]

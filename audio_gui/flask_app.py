@@ -22,6 +22,8 @@ from flask import Response
 from flask import send_from_directory
 from subprocess import run, PIPE
 import io, os
+import os.path, time 
+from os import walk
 import random
 import string
 from zipfile import ZipFile
@@ -40,8 +42,6 @@ app.config.from_object('config')
 def random_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
-import os.path, time 
-from os import walk
 def cleanTmpRepository():
     f =[]
     for root, dirs, files in os.walk(app.config["CLIENT_SOUNDS"]):
@@ -55,48 +55,6 @@ def cleanTmpRepository():
             os.remove(filePath)
     return
 
-@app.route('/visits-counter/')
-def visits():
-    if 'visits' in session:
-        session['visits'] = session.get('visits') + 1  # reading and updating session data
-    else:
-        session['visits'] = 1 # setting session data
-    return "Total visits: {}".format(session.get('visits'))
-
-@app.route('/delete-visits/')
-def delete_visits():
-    session.pop('visits', None) # delete visits
-    return 'Visits deleted'
-
-
-@app.route('/tmp/audio.wav')
-def download():
-    print(session['wavName'])
-    return send_file( session.get('wavName'))
-
-    
-@app.route('/plot.png')
-def plot_png():
-    wavdata, fs = lb.load(session.get('wavName'))
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    axis.plot(wavdata)
-    output = io.BytesIO()    
-    FigureCanvas(fig).print_png(output)
-    #wav.write('./audioapp/tmp/audio.wav', rate, data)
-    return Response(output.getvalue(), mimetype='image/png')
-
-@app.route('/plot.svg/')
-def plot_svg():
-    print('test')
-    svg_io = io.StringIO()
-    wavdata, fs = lb.load(session.get('wavName'))
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    axis.plot(wavdata)
-    FigureCanvasSVG(fig).print_svg(svg_io)
-    #print(svg_io.getvalue())
-    return Response(svg_io.getvalue(), mimetype='image/svg+xml')
 
 
 def addSvgFigure(myList, myName,myFig):
@@ -120,6 +78,11 @@ def addValueTable(myDictData, myName, myData,numVirg):
     myDictData[myName]=tempData
 
 
+@app.route('/tmp/audio.wav')
+def download():
+    print(session['wavName'])
+    return send_file( session.get('wavName'))
+
 @app.route('/analyze.html')
 def analyze():
 #we add a timestamp in the returned parameter for the template to avoid a cache effect when we want download zip and wav file
@@ -127,8 +90,8 @@ def analyze():
     print("analyze")
     if 'wavName' not in session or not os.path.exists(session.get('wavName')):
         return index()
-    
-    analyzer = segmentingAnalyzer(session.get('wavName'))
+    vowels = app.config["USED_VOWELS"]
+    analyzer = segmentingAnalyzer(session.get('wavName'),vowels = vowels,useVoiceDetection = app.config["USE_VOICEDETECTION"])
 
     mySvgFigures= {}
     print("wave")
@@ -136,7 +99,7 @@ def analyze():
     print("jitter")
     [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=analyzer.myJitterAndShimmer()
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
-    seg_names = ["O", "A", "E", "I", "OU"]
+    
     print("FFT")
     fftFig,fft1000Fig=analyzer.myFft()
     addSvgFigure(mySvgFigures,'FFT',fftFig)
@@ -146,7 +109,9 @@ def analyze():
     addSvgFigure(mySvgFigures,'Mel Spectrogram',analyzer.myMelSpectrogramme())
 
     myValueTables = {}
-    myValueTables['key']={'O':'O','A':'A','E':'E','I':'I','OU':'OU'}
+    myValueTables['key']={}
+    for vowel in vowels:
+        myValueTables['key'][vowel]=vowel
 
     addValueTable(myValueTables,'Jitter',tableJit,5)
     addValueTable(myValueTables,'Shimmer',tableShim,3)
@@ -155,9 +120,7 @@ def analyze():
     addValueTable(myValueTables,'Evolution du pitch [Hz]',pitch_beg_end,2)
     addValueTable(myValueTables,'Pitch relatif au huitieme[Hz]',pitch_huitieme,2)
     addValueTable(myValueTables,'Centroide spectrale [Hz]',bri_av,1)
-    #print(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue())
-    #return render_template('analyze.html', tableShim = tableShim, tableJit = tableJit, plotData = Markup(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue()),plotFft=Markup(svg_io2.getvalue()),
-    #    plotSpectrogramme=Markup(svg_io3.getvalue()), plotMelSpectrogramme=Markup(svg_io4.getvalue()))
+
     return render_template('analyze.html', myValueTables = myValueTables, myStringTables = {},mySvgFigures= mySvgFigures, timestamp = int(time.time()))
 
  
@@ -174,7 +137,9 @@ def archive():
         os.remove(myFileName+'.zip')
     with ZipFile(myFileName+'.zip', 'w') as zipObj:
         zipObj.write( session['wavName'],'record.wav')
-        analyzer = segmentingAnalyzer(session.get('wavName'))
+        
+        vowels = app.config["USED_VOWELS"]
+        analyzer = segmentingAnalyzer(session.get('wavName'),vowels = vowels,useVoiceDetection = app.config["USE_VOICEDETECTION"])
 
         [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=analyzer.myJitterAndShimmer()
         tempName=myFileName+'jitter.svg'
@@ -182,7 +147,6 @@ def archive():
         zipObj.write( tempName,'jitter.svg')
         os.remove(tempName)
         tempName=myFileName+'fft.svg'
-        seg_names = ["O", "A", "E", "I", "OU"]
         fftFig,fft1000Fig=analyzer.myFft() 
         tempName=myFileName+'fft.svg' 
         fftFig.savefig(tempName, format = 'svg')
@@ -210,11 +174,11 @@ def archive():
 @app.route('/audio', methods=['POST'])
 def audio():
     print('test------------------------------')
-    if (len(request.data)>2000000):
+    if (len(request.data)>1000000):
         print("wav recording is too long")
         return ("too long")
     if (len(request.data)<2000):
-        print("wav recording is too long")
+        print("wav recording is too short")
         return ("too long")
 
     with open(session.get('wavName'), 'wb') as f:
@@ -226,15 +190,14 @@ def audio():
         os.remove(session.get('wavName'))
         with open(session.get('wavName'), 'wb') as f:
             f.write(request.data)
-        return "False"
+        return "The sound data are not valid"
     else:
-        return "True"
+        return "The sound recording has a valid length"
 
 @app.route('/')
 @app.route('/index.html')
 def index():
     cleanTmpRepository()
-    #print(app.config["CLIENT_SOUNDS"])
     if 'wavName' in session and os.path.exists(session.get('wavName')):
         print('wavname is already : ',session.get('wavName'))
     else:

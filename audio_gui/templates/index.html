@@ -26,6 +26,8 @@
             <button id="stop" class="btn btn-danger" onclick="stopRecording()" disabled>Stop</button>
             <button id="analyze" class="btn btn-analyze" onclick="location.href='analyze.html'" disabled>Analyze</button>
         </p>
+        
+        <textarea id="output" style="width: 30%;height: 50px" readonly></textarea>
     </div>
 
     <script src="{{ url_for('static', filename='recorder.js') }}"></script>

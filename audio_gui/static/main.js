@@ -33,8 +33,8 @@ function gotBuffers(buffers) {
 function doneEncoding(soundBlob) {
     // fetch('/audio', {method: "POST", body: soundBlob}).then(response => $('#output').text(response.text()))
     fetch('/audio', {method: "POST", body: soundBlob}).then(response => response.text().then(text => {
-        //document.getElementById('output').value = text;
-        if (text=="True")
+        document.getElementById('output').value = text;
+        if (text=="The sound recording has a valid length")
             {document.getElementById('analyze').disabled = false;}
         document.getElementById('start').removeAttribute('disabled');
     }));

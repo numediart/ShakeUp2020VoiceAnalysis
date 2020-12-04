@@ -21,7 +21,7 @@
 import random, threading, webbrowser
 import winreg, os, shlex, time
 
-from views import app
+from flask_app import app
 
 def try_find_chrome_path():
     result = None
