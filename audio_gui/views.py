@@ -119,38 +119,32 @@ def addValueTable(myDictData, myName, myData,numVirg):
         tempData[key]=round(value,numVirg)
     myDictData[myName]=tempData
 
+
 @app.route('/analyze.html')
 def analyze():
+#we add a timestamp in the returned parameter for the template to avoid a cache effect when we want download zip and wav file
+
     print("analyze")
     if 'wavName' not in session or not os.path.exists(session.get('wavName')):
         return index()
     
-    wavdata, fs = lb.load(session.get('wavName'), sr =None, dtype = np.double)
+    analyzer = segmentingAnalyzer(session.get('wavName'))
 
-        
     mySvgFigures= {}
-
     print("wave")
-    addSvgFigure(mySvgFigures,'segmented sound wave',segmentedSonogram(wavdata, fs))
-
+    addSvgFigure(mySvgFigures,'segmented sound wave',analyzer.segmentedSonogram())
     print("jitter")
-    [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myJitterAndShimmer(wavdata, fs)
-    #[figJitShim,tableJit,tableShim]=myJitterAndShimmer(wavdata, fs)
-    
+    [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=analyzer.myJitterAndShimmer()
     addSvgFigure(mySvgFigures,'Jitter',figJitShim)
     seg_names = ["O", "A", "E", "I", "OU"]
-
     print("FFT")
-    addSvgFigure(mySvgFigures,'FFT',myFft(wavdata, fs,seg_names))
-    addSvgFigure(mySvgFigures,'FFT_1000',myFft_1000(wavdata, fs,seg_names))
+    fftFig,fft1000Fig=analyzer.myFft()
+    addSvgFigure(mySvgFigures,'FFT',fftFig)
+    addSvgFigure(mySvgFigures,'FFT_1000',fft1000Fig)
     print("Spectrogram")
-    addSvgFigure(mySvgFigures,'Spectrogram',mySpectrogramme(wavdata, fs))
-    addSvgFigure(mySvgFigures,'Mel Spectrogram',myMelSpectrogramme(wavdata, fs))
-    
+    addSvgFigure(mySvgFigures,'Spectrogram',analyzer.mySpectrogramme())
+    addSvgFigure(mySvgFigures,'Mel Spectrogram',analyzer.myMelSpectrogramme())
 
-    #myStringTables = {}
-    #addValueTable(myStringTables,'Jitter',tableJit)
-    #addValueTable(myStringTables,'Shimmer',tableShim)
     myValueTables = {}
     myValueTables['key']={'O':'O','A':'A','E':'E','I':'I','OU':'OU'}
 
@@ -164,37 +158,46 @@ def analyze():
     #print(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue())
     #return render_template('analyze.html', tableShim = tableShim, tableJit = tableJit, plotData = Markup(svg_io.getvalue()),plotJitterAndShimmer=Markup(svg_io1.getvalue()),plotFft=Markup(svg_io2.getvalue()),
     #    plotSpectrogramme=Markup(svg_io3.getvalue()), plotMelSpectrogramme=Markup(svg_io4.getvalue()))
-    return render_template('analyze.html', myValueTables = myValueTables, myStringTables = {},mySvgFigures= mySvgFigures)
+    return render_template('analyze.html', myValueTables = myValueTables, myStringTables = {},mySvgFigures= mySvgFigures, timestamp = int(time.time()))
 
  
 @app.route('/tmp/archive.zip')
 def archive():
+    print("********************************************************************************************")
     baseName=os.path.basename(session['wavName'])
     print(baseName)
     #baseName=os.path.splitext( base)[0]+'.zip'
     myFileName =os.path.splitext( session['wavName'])[0]
-    print(myFileName) 
+    print(myFileName+'.zip') 
+    if (os.path.isfile(myFileName+'.zip')):
+        print("remove previous archive")
+        os.remove(myFileName+'.zip')
     with ZipFile(myFileName+'.zip', 'w') as zipObj:
         zipObj.write( session['wavName'],'record.wav')
+        analyzer = segmentingAnalyzer(session.get('wavName'))
 
-        wavdata, fs = lb.load(session.get('wavName'), sr =None, dtype = np.double)
-
-        [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=myJitterAndShimmer(wavdata, fs)
+        [figJitShim,tableJit,tableShim,pitch_av,pitch_var,pitch_beg_end,pitch_huitieme,bri_av]=analyzer.myJitterAndShimmer()
         tempName=myFileName+'jitter.svg'
         figJitShim.savefig(tempName, format = 'svg')
         zipObj.write( tempName,'jitter.svg')
         os.remove(tempName)
         tempName=myFileName+'fft.svg'
         seg_names = ["O", "A", "E", "I", "OU"]
-        myFft(wavdata, fs,seg_names).savefig(tempName, format = 'svg')
+        fftFig,fft1000Fig=analyzer.myFft() 
+        tempName=myFileName+'fft.svg' 
+        fftFig.savefig(tempName, format = 'svg')
         zipObj.write( tempName,'fft.svg')
         os.remove(tempName)
+        tempName=myFileName+'fft_1000.svg' 
+        fft1000Fig.savefig(tempName, format = 'svg')
+        zipObj.write( tempName,'fft_1000.svg')
+        os.remove(tempName)
         tempName=myFileName+'Spec.svg'
-        mySpectrogramme(wavdata, fs).savefig(tempName, format = 'svg')
+        analyzer.mySpectrogramme().savefig(tempName, format = 'svg')
         zipObj.write( tempName,'Spec.svg')
         os.remove(tempName)
         tempName=myFileName+'MelSpec.svg'
-        myMelSpectrogramme(wavdata, fs).savefig(tempName, format = 'svg')
+        analyzer.myMelSpectrogramme().savefig(tempName, format = 'svg')
         zipObj.write( tempName,'MelSpec.svg')
         os.remove(tempName)
 
@@ -208,6 +211,9 @@ def archive():
 def audio():
     print('test------------------------------')
     if (len(request.data)>2000000):
+        print("wav recording is too long")
+        return ("too long")
+    if (len(request.data)<2000):
         print("wav recording is too long")
         return ("too long")
 

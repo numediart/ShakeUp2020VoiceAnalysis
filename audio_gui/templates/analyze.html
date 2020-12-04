@@ -129,9 +129,9 @@
         
     </section>
     <footer>
-        <button id="Listen" class="btn btn-info" onclick="window.open('/tmp/audio.wav')">Listen</button>
+        <button id="Listen" class="btn btn-info" onclick="window.open('/tmp/audio.wav?timestamp={{ timestamp }}')">Listen</button>
         <button id="return" class="btn btn-success" onclick="location.href='index.html'">Return</button>
-        <button id="Archive" class="btn btn-success" onclick="window.open('/tmp/archive.zip')">Archive</button>
+        <button id="Archive" class="btn btn-success" onclick="window.open('/tmp/archive.zip?timestamp={{ timestamp }}')">Archive</button>
     </footer>
 
 {% endblock %}
