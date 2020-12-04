@@ -31,7 +31,7 @@ from math import nan
 
 class segmentingAnalyzer:
     """Class to segment and analyze a waveform"""    
-    def __init__(self, wavfilename, vowels = ["O", "A", "E", "I", "OU"]):
+    def __init__(self, wavfilename, vowels = ["O", "A", "E", "I", "OU"], useVoiceDetection = False):
         self.wavFileName = wavfilename
         self.vowels = vowels
         self.nseg = len(vowels)
@@ -41,7 +41,7 @@ class segmentingAnalyzer:
         self.index=[]
         try:
             self.wav,self.fs =  lb.load(self.wavFileName, sr =None, dtype = np.double)
-            self.segs,self.index = segment_audio(self.wav, self.fs,self.nseg)
+            self.segs,self.index = segment_audio(self.wav, self.fs,self.nseg, useVoiceDetection)
         except (ValueError):
             print("catch", ValueError)
             pass

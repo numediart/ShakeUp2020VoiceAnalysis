@@ -43,7 +43,7 @@ def spectrogram(signal, fs):
 #     return lst
 
 
-def segment_audio(wav, fs, nsegments):
+def segment_audio(wav, fs, nsegments, voiceDetect = False):
     """[summary]
 
     Args:
@@ -55,7 +55,7 @@ def segment_audio(wav, fs, nsegments):
         [type]: [description]
     """
     #wav, fs = lb.load(path, dtype=np.float64)
-    ind, _ = _segment(wav, fs, nsegments)
+    ind, _ = _segment(wav, fs, nsegments, voiceDetect)
     lst = []
     indLst =[]
     for i in range(len(ind) - 1):
@@ -196,10 +196,10 @@ def trim_first_zeros(audio, arr):
 #                 return [audio[ind:],ind]
 
 
-def _segment(wav, fs, nsegments, vocDetect = False):
+def _segment(wav, fs, nsegments, voiceDetect = False):
     #wav, fs = lb.load(path)
     # apply VAD
-    if vocDetect:
+    if voiceDetect:
         v = VoiceActivityDetector(wav, fs)
         segs = v.detect_speech()
         print("len:",len(segs))

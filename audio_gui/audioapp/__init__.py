@@ -18,4 +18,4 @@
 from flask import Flask
 
 
-from .evaAnalyze import *
+from .voiceAnalyze import *
