@@ -14,6 +14,7 @@ Each use of this software must be attributed to University of MONS – CLICK' Li
 This work was produced as part of the FEDER Digistorm project, co-financed by the European Union and the Wallonia Region.
 ![Logo FEDER-FSE](https://www.enmieux.be/sites/default/files/assets/media-files/signatures/vignette_FEDER%2Bwallonie.png)
 
+## Description
 
 This project allows to record a wav sound and propose a fft-based analysis of the segmented signals in a predeterminated number of voiced vowels (currently five)
 
