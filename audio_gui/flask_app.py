@@ -51,7 +51,7 @@ def cleanTmpRepository():
         print(filePath)
         print("time: %s" % time.ctime(time.time()))
         print("last modified: %s" % time.ctime(os.path.getmtime(filePath)))
-        if (time.time()-os.path.getmtime(filePath)>3600):
+        if (time.time()-os.path.getmtime(filePath)>app.config["SOUND_MEMORY_DURATION"]):
             os.remove(filePath)
     return
 
@@ -174,8 +174,8 @@ def archive():
 @app.route('/audio', methods=['POST'])
 def audio():
     print('test------------------------------')
-    if (len(request.data)>1000000):
-        print("wav recording is too long")
+    if (len(request.data)>app.config["SOUND_MAX_SIZE"]):
+        print("wav recording is too long",len(request.data))
         return ("too long")
     if (len(request.data)<2000):
         print("wav recording is too short")

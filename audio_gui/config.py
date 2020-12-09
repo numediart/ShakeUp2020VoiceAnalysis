@@ -24,8 +24,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 CLIENT_SOUNDS = basedir+'/tmp/'
 
 #option
-USE_VOICEDETECTION = False
 
-USED_VOWELS = ["O", "A", "E", "I", "OU"]
+USE_VOICEDETECTION = False#this flag enable/disable the voice detection (based on our test it's not necessary)
+
+SOUND_MAX_SIZE = 5000000 #max memory in Bytes accepted for a wav file
+USED_VOWELS = ["O", "A", "E", "I", "OU"]#these number of vowels will be segmented and these labels will be used in the figures
+
+SOUND_MEMORY_DURATION =1*60*60#every unused file is deleted after this duration in second
 
 #USED_VOWELS = ["LA0", "LA1", "LA2", "LA3", "LA4", "LA5"]

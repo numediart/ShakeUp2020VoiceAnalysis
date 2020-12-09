@@ -1,0 +1,1 @@
+We will store wav files in this temporary directory. These files are deleted after one hour.
